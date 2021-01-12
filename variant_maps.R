@@ -165,6 +165,7 @@ plot_variants<-function(a,s)
 
 plot_covariate<-function(c,i)
 {
+  c[,i]<-as.character(c[,i])  ## ensure treated as strings/characgters and not as numeric
   g<- ggplot(c,aes(x=1,y=ID)) + 
     geom_tile(aes_string(fill=i)) + 
     xlab(i) +
@@ -333,20 +334,21 @@ if(! is.null(opt$tree)){
   panels$tree<-plot_tree(tree)
 }
 
-#covariate.ids<-colnames(covariates)
-#covariate.ids<-covariate.ids[covariate.ids!="ID"]
+covariate.ids<-colnames(covariates)
+covariate.ids<-covariate.ids[covariate.ids!="ID"]
 
-
-#textcovariates<-unlist(strsplit(opt$textcovariates,","))
-
-#for (id in covariate.ids){
-#  if(id %in% textcovariates){
-#      cat(id,"in text covariates\n")
-#      panels[[id]]<-plot_covariate_text(covariates,id)
-#  }else{
-#      panels[[id]]<-plot_covariate(covariates,id)
-#  }
-#}
+textcovariates<-NULL
+if(! is.null(opt$textcovariates)){
+	textcovariates<-unlist(strsplit(opt$textcovariates,","))
+}
+for (id in covariate.ids){
+  if(id %in% textcovariates){
+      cat(id,"in text covariates\n")
+      panels[[id]]<-plot_covariate_text(covariates,id)
+  }else{
+      panels[[id]]<-plot_covariate(covariates,id)
+  }
+}
 
 
 #### get the allele plot, a heatmap
@@ -359,16 +361,16 @@ num_samples = length(sample.order)
 cat("number of samples for this heatmap is ",num_samples,"\n")
 num_sites = length(unique(alleles$pos))
 cat("number of genomic positions for this heatmap is ",num_sites,"\n")
-#num_covariates<-length(covariate.ids)
-#cat("number of covariates for this heatmap is ",num_covariates,"\n")
+num_covariates<-length(covariate.ids)
+cat("number of covariates for this heatmap is ",num_covariates,"\n")
 
 
 
 ### set the panel width, 1 for the tree, 0.1 for each covariate and 4 for the variants
 ### the proportion for the variant panel should adjust based on the number of variants
 #panel.widths<-c(1,rep(0.1,length(covariate.ids)),4)
-#covariate_panel_widths<-rep(0.1,num_covariates)
-#covariate_panel_widths[covariate.ids %in% textcovariates]<-0.3
+covariate_panel_widths<-rep(0.1,num_covariates)
+covariate_panel_widths[covariate.ids %in% textcovariates]<-0.3
 
 panel.widths<-NULL
 image.width<-0
@@ -376,10 +378,10 @@ if(! is.null(opt$tree)){
   panel.widths<-c(panel.widths,1)
   image.width<-1
 }
-#panel.widths<-c(panel.widths,covariate_panel_widths)
+panel.widths<-c(panel.widths,covariate_panel_widths)
 panel.widths<-c(panel.widths,0.1*num_sites)
 
-#image.width<-image.width + sum(covariate_panel_widths)
+image.width<-image.width + sum(covariate_panel_widths)
 image.width<-image.width + (0.05*num_sites)*4
 
 image.height<-0.25 * num_samples
